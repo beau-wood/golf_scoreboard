@@ -67,10 +67,10 @@ def buildHTML():
 
 def storeScores(formData):
     print(formData)
-    df = pd.read_csv('Scoreboard.csv')
+    df = pd.read_csv('data/Scoreboard.csv')
     df.loc[df['Name'] == formData['name'], formData['course']] = int(formData['score'])
     df.loc[df['Name'] == formData['name'], formData['course']+'_Pts'] = 1 if formData['winner'] == 'Win' else 0
     df = df.fillna(0)
     df['Total'] = df['Turtle'] + df['Ocean'] + df['Osprey']
     #df[['Turtle', 'Ocean', 'Osprey']] = df[['Turtle', 'Ocean', 'Osprey']].astype(int)
-    df.to_csv('Scoreboard.csv', index=False)
+    df.to_csv('data/Scoreboard.csv', index=False)

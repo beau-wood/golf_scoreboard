@@ -12,14 +12,14 @@ import random
 Courses = ['Turtle', 'Ocean', 'Osprey']
 
 def getPlayers():
-    df = pd.read_csv('Handicaps.csv')
+    df = pd.read_csv('data/Handicaps.csv')
     players = df.set_index('Name').to_dict('index')
     for k, v in players.items():
         players[k] = v.get('Handicap')
     return players
 
 def getMatchups():
-    xlsx = pd.ExcelFile('Matchups.xlsx')
+    xlsx = pd.ExcelFile('data/Matchups.xlsx')
     pairings = []
     for course in Courses:
         df = pd.read_excel(xlsx, course)
@@ -27,7 +27,7 @@ def getMatchups():
     return pairings
 
 def getTeams():
-    xlsx = pd.ExcelFile('Matchups.xlsx')
+    xlsx = pd.ExcelFile('data/Matchups.xlsx')
     pairings = []
     df = pd.read_excel(xlsx, 'Turtle')
     mac = df['Team Mac'].values
@@ -42,7 +42,7 @@ def buildHTML():
     teams = getTeams()
 
     # Read scoreboard from csv and serialize to html
-    df = pd.read_csv('Scoreboard.csv')
+    df = pd.read_csv('data/Scoreboard.csv')
     df.fillna(0, inplace=True)
     df[['Turtle', 'Ocean', 'Osprey', 'Total']] = df[['Turtle', 'Ocean', 'Osprey', 'Total']].astype(int)
     df['Total'] = df['Turtle'] + df['Ocean'] + df['Osprey']
