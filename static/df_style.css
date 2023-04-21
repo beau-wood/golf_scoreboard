@@ -1,0 +1,55 @@
+/* includes alternating gray and white with on-hover color */
+
+.mystyle {
+    font-family: Arial;
+    border-collapse: collapse; 
+    border: 1px solid silver;
+    margin-left: auto; 
+    margin-right: auto;
+    font-size: 25px;
+}
+
+.mystyle td, th {
+    padding: 5px;
+}
+
+
+.mystyle tr:nth-child(even) {
+    background: #E0E0E0;
+}
+
+.mystyle tr:hover {
+    background: silver;
+    cursor: pointer;
+}
+
+h2 {
+    text-align: center;
+}
+
+.header {
+  overflow: hidden;
+  background-color: #f1f1f1;
+  padding: 30px 20px;
+}
+
+.header a {
+  float: left;
+  color: black;
+  text-align: center;
+  padding: 12px;
+  text-decoration: none;
+  font-size: 30px;
+  line-height: 45px;
+  border-radius: 4px;
+}
+
+.header a.logo {
+  font-size: 40px;
+  font-weight: bold;
+}
+
+.header a {
+  float: none;
+  text-align: left;
+}
