@@ -102,6 +102,9 @@ def buildHTML():
     for player, scores in namedScores.items():
         if player in teams['Team Mac']:
             teamScores['Team Mac'] += scores['Turtle_Pts'] + scores['Ocean_Pts'] + scores['Osprey_Pts']
+        elif player in teams['Team Sam']:
+            teamScores['Team Sam'] += scores['Turtle_Pts'] + scores['Ocean_Pts'] + scores['Osprey_Pts']
+
 
     # Base HTML
     HTML = """
