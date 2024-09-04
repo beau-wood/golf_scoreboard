@@ -25,6 +25,10 @@ def buildHTML():
     # Score
     formItems.append('<label for="score">Score:</label>')
     formItems.append('<input class="mystyle" type="text" id="score" name="score" required><br><br>')
+    
+    # Score
+    formItems.append('<label for="score_net">Score (Net):</label>')
+    formItems.append('<input class="mystyle" type="text" id="score" name="score_net" required><br><br>')
 
     # Winner?
     # Courses
@@ -47,7 +51,7 @@ def buildHTML():
         </head>
         <body>
         <div class="header">
-          <a href="/" class="logo">Rudy's Cup 2023</a>
+          <a href="/" class="logo">Rudy's Cup 2024</a>
           <br>
           <div class="header-right">
             <a class="active" href="/">Home</a>
@@ -69,8 +73,10 @@ def storeScores(formData):
     print(formData)
     df = pd.read_csv('data/Scoreboard.csv')
     df.loc[df['Name'] == formData['name'], formData['course']] = int(formData['score'])
+    df.loc[df['Name'] == formData['name'], formData['course'] + '_net'] = int(formData['score_net'])
     df.loc[df['Name'] == formData['name'], formData['course']+'_Pts'] = 1 if formData['winner'] == 'Win' else 0
     df = df.fillna(0)
-    df['Total'] = df['Turtle'] + df['Ocean'] + df['Osprey']
-    #df[['Turtle', 'Ocean', 'Osprey']] = df[['Turtle', 'Ocean', 'Osprey']].astype(int)
+    df['Total'] = df[Courses].sum(axis=1)
+    netCourses = [x + '_net' for x in Courses]
+    df['Total_net'] = df[netCourses].sum(axis=1)
     df.to_csv('data/Scoreboard.csv', index=False)
