@@ -7,146 +7,213 @@
 import pandas as pd
 import random
 
+def getCourses():
+    df = pd.read_csv('data/courses.csv')
+    courses = df.set_index('course').to_dict('index')
+    # 'Sand Valley': {'format': '2v2'}
+    return courses
 
+def getTeam(team=[1,2][0]):
+    if team == 1:
+        df = pd.read_csv('data/team1.csv')
+        team = df.set_index('Name').to_dict('index')
+    else:
+        df = pd.read_csv('data/team2.csv')
+        team = df.set_index('Name').to_dict('index')
+    return team
 
-Courses = ['Sand Valley', 'Mammoth', 'Sand Valley(2)', 'Sedge']
-
-def getPlayers():
-    df = pd.read_csv('data/Handicaps.csv')
-    players = df.set_index('Name').to_dict('index')
-    for k, v in players.items():
-        players[k] = v.get('Handicap')
+def getAllPlayers():
+    team1 = getTeam(1)
+    team2 = getTeam(2)
+    players = {**team1, **team2}
+    # 'Sean ODonovan': {'Handicap': 18.1}
     return players
 
 def getMatchups():
-    xlsx = pd.ExcelFile('data/Matchups.xlsx')
-    pairings = []
-    for course in Courses:
-        df = pd.read_excel(xlsx, course)
-        pairings.append(df.values)
-    return pairings
+    df = pd.read_csv('data/matchups.csv')
+    return df
 
-def getTeams():
-    xlsx = pd.ExcelFile('data/Matchups.xlsx')
-    pairings = []
-    df = pd.read_excel(xlsx, 'Sand Valley')
-    mac = df['Team Sean'].values
-    sam = df['Team JJ'].values
-    return {'Team Sean': mac,
-            'Team JJ': sam}
+def getPlayerScores():
+    df = pd.read_csv('data/playerScores.csv')
+    return df
 
+def getTeamScores():
+    df = pd.read_csv('data/teamScores.csv')
+    return df
 
-def buildHTML():
-    players = getPlayers()
-    pairings = getMatchups()
-    teams = getTeams()
-    
-    netCourses = [x + '_net' for x in Courses]
+def getIndiScores():
+    df = pd.read_csv('data/indiScores.csv')
+    return df
 
-    # Read scoreboard from csv and serialize to html
-    df = pd.read_csv('data/Scoreboard.csv')
-    df.fillna(0, inplace=True)
-    df[Courses + netCourses + ['Total']] = df[Courses + netCourses + ['Total']].astype(int)
-    df['Total'] = df[Courses].sum(axis=1)
-    df['hcp'] = df['Name'].apply(lambda x: players.get(x))
-    #df['Turtle_Pts'] = df['Turtle_Pts'].astype(int)
-    #df['Ocean_Pts'] = df['Ocean_Pts'].astype(int)
-    #df['Osprey_Pts'] = df['Osprey_Pts'].astype(int)
-    namedScores = df.set_index('Name').to_dict('index')
+def get1v1Matchups():
+    return
 
-    df.drop([x for x in df.columns if x.endswith('_Pts')], axis=1, inplace=True)
+def buildScoreboards():
+    courses = getCourses()
+    team1 = getTeam(1)
+    team2 = getTeam(2)
+    players = getAllPlayers()
+    matchups = getMatchups()
+    playerScores = getPlayerScores()
+    teamScores = getTeamScores()
+    indiScores = getIndiScores()
 
-    # create Net df
-    #dfNet = df.copy()
-    #totalZero = dfNet['Total'] == 0.0
-    #dfNet[Courses] = dfNet[Courses] - dfNet[['hcp']].values
-    #dfNet.loc[totalZero, Courses] = 0.0
-    #dfNet['Total'] = dfNet[Courses].sum(axis=1)
+    # Team Scores
+    team1Score, team2Score = getTeamTotalScores()
 
-    # add in nets
-    #df.set_index('Name', inplace=True)
-    #dfNet.set_index('Name', inplace=True)
-    for c in Courses:
-        df[c] = df[c].astype(str) + ' / ' + df[c + '_net'].astype(str)
-    df['Total'] = df['Total'].astype(str) + ' / ' + df['Total_net'].astype(str)
+    # Player Score Table
+    playerTableHtml = getPlayerTableHtml()
 
-    df = df[['Name', 'hcp'] + Courses + ['Total']]
-    df.sort_values(['Total'], ascending=True, inplace=True, key=lambda x: x.str.split('/ ').str[-1].astype(float))
-    scoreboardHtml = df.to_html(index=False, classes="mystyle")
-    scoreboardHtml = scoreboardHtml.replace('<tr style="text-align: right;">', '<tr style="text-align: left;">')
+    # Team Tables
+    teamTableHtml = ""
+    for c, value in courses.items():
+        if value['format'] != '1v1':
+            teamTableHtml += buildCourseHtml(c)
 
-    # Course Scoreboards
-    courses = []
-    for i, course in enumerate(Courses):
-        frameRows = []
-        for pairing in pairings[i]:
-            player1 = pairing[0]
-            player1Score = "{} / {}".format(namedScores[player1][course], namedScores[player1][course + '_net'])
-            player1Points = namedScores[player1][course + '_Pts']
-            player2 = pairing[1]
-            player2Score = "{} / {}".format(namedScores[player2][course], namedScores[player2][course + '_net'])
-            player2Points = namedScores[player2][course + '_Pts']
+    # Individual tables
+    indiTableHtml = ""
+    for c, value in courses.items():
+        if value['format'] == '1v1':
+            indiTableHtml += buildIndiCourseHtml(c)
 
-            frameRows.append([player1, player1Score, player1Points, player2, player2Score, player2Points])
-        courseFrame = pd.DataFrame(frameRows, columns=["Team Sean", "Gross/Net", "Pts", "Team JJ", "Gross/Net", "Pts"])
-        courseHtml = courseFrame.to_html(index=False, classes="mystyle").replace('<tr style="text-align: right;">', '<tr style="text-align: left;">')
-        courses.append(courseHtml)
-
-    # Build Team Scoreboard
-    teamScores = {'Team Sean': 0, 'Team JJ': 0}
-    for player, scores in namedScores.items():
-        if player in teams['Team Sean']:
-            teamScores['Team Sean'] += sum([scores[c + '_Pts'] for c in Courses])
-        elif player in teams['Team JJ']:
-            teamScores['Team JJ'] += sum([scores[c + '_Pts'] for c in Courses])
-
-
-    # Base HTML
     HTML = """
-    <html>
-      <head><title>Rudy's Cup 2024</title></head>
-      <link rel="stylesheet" type="text/css" href="/static/df_style.css"/>
-      <body>
-      <div class="header">
-          <a href="/" class="logo">Rudy's Cup 2024</a>
-          <br>
-          <div class="header-right">
-            <a class="active" href="/">Home</a>
-            <br>
-            <a class="active" href="/enter">Enter Score</a>
+        <html>
+          <head><title>Rudy's Cup 2024</title></head>
+          <link rel="stylesheet" type="text/css" href="/static/df_style.css"/>
+          <body>
+          <div class="header">
+              <a href="/" class="logo">Rudy's Cup 2024</a>
+              <br>
+              <div class="header-right">
+                <a class="active" href="/">Home</a>
+                <br>
+                <a class="active" href="/enter">Enter Player Score</a>
+                <br>
+                <a class="active" href="/team-scores">Enter 2v2 Points</a>
+                <br>
+                <a class="active" href="/indi-scors">Enter 1v1 Points</a>
+              </div>
           </div>
-      </div>
-      
-        <h2>Team Scores</h2>        
-        <table class='mystyle'>
-          <tr>
-            <td><img src="static/sean_throwback.jpg" alt="Sean" style='width: 160px'></td>
-            <td>{sean_score}</td>
-            <td><img src="static/jj_ravens.jpg" alt="JJ" style='width: 160px'></td>
-            <td>{jj_score}</td>
-          </tr>
-        </table>
-        
-        <h2>Player Scores</h2> 
-        {table}
-        
-        <h2>Sand Valley</h2>
-        {sv}
-        
-        <h2>Mammoth</h2>
-        {mammoth}
-        
-        <h2>Sand Valley (2)</h2>
-        {sv2}
-        
-        <h2>Sedge Valley</h2>
-        {sedge}
-      </body>
-    </html>.
-    """.format(sean_score=teamScores['Team Sean'], jj_score=teamScores['Team JJ'], table=scoreboardHtml, sv=courses[0], mammoth=courses[1], sv2=courses[2], sedge=courses[3])
 
+            <h2>Team Scores</h2>        
+            <table class='mystyle'>
+              <tr>
+                <td><img src="static/sean_throwback.jpg" alt="Sean" style='width: 160px'></td>
+                <td>{team1_score}</td>
+                <td><img src="static/jj_ravens.jpg" alt="JJ" style='width: 160px'></td>
+                <td>{team2_score}</td>
+              </tr>
+            </table>
+            {playerTable}
+            
+            {team_tables}
+            
+            {indi_tables}
+
+          </body>
+        </html>.
+        """.format(team1_score=team1Score, team2_score=team2Score, playerTable=playerTableHtml,
+                   team_tables=teamTableHtml, indi_tables=indiTableHtml)
 
     return HTML
+
+
+def getTeamTotalScores():
+    team1Score = 0
+    team2Score = 0
+    courses = getCourses()
+    for c, value in courses.items():
+        if value['format'] == '2v2':
+            table = buildCourseTable(c)
+        elif value['format'] == '1v1':
+            table = buildIndiCourseTable(c)
+        else:
+            raise
+        table.columns = ['Team1', 'Team1_Score', 'Team2', 'Team2_Score']
+        team1Score += table['Team1_Score'].sum()
+        team2Score += table['Team2_Score'].sum()
+
+    return team1Score, team2Score
+
+
+def getPlayerTableHtml():
+    players = getAllPlayers()
+    playerScores = getPlayerScores()
+    courses = getCourses()
+
+    playerScores.set_index('player', inplace=True)
+    playerTableRows = []
+    for player in list(players.keys()):
+        playerRow = [player]
+        playerTotal = 0
+        playerTotalNet = 0
+        for course in list(courses.keys()):
+            playerTotal += playerScores.loc[player, course]
+            playerTotalNet += playerScores.loc[player, course + '_net']
+            playerScore = playerScores.loc[player, course].astype(str) + ' / ' + playerScores.loc[
+                player, course + '_net'].astype(str)
+            playerRow.append(playerScore)
+        playerRow.append(''.join([str(playerTotal), ' / ', str(playerTotalNet)]))
+        playerTableRows.append(playerRow)
+    print(playerTableRows)
+    playerTable = pd.DataFrame(playerTableRows, columns=['Name'] + list(courses.keys()) + ['Total'])
+    playerTable.sort_values(['Total'], ascending=True, inplace=True, key=lambda x: x.str.split('/ ').str[-1].astype(float))
+    playerTableHtml = playerTable.to_html(index=False, classes="mystyle")
+    return playerTableHtml
+
+
+def buildCourseTable(course):
+    matchups = getMatchups()
+    teamScores = getTeamScores()
+
+    teamScores.set_index('course', inplace=True)
+    scores = teamScores.loc[course]
+    matchups.set_index('course', inplace=True)
+    matchups = matchups.loc[course]
+    row1 = [matchups.loc['team1-m1'], scores.loc['team1-m1'], matchups.loc['team2-m1'], scores.loc['team2-m1']]
+    row2 = [matchups.loc['team1-m2'], scores.loc['team1-m2'], matchups.loc['team2-m2'], scores.loc['team2-m2']]
+
+    table = pd.DataFrame([row1, row2], columns=['Team 1', 'Score', 'Team 2', 'Score'])
+    return table
+
+def buildCourseHtml(course):
+    table = buildCourseTable(course)
+    tableHtml = "<h2>{}</h2>".format(course)
+    tableHtml += table.to_html(index=False, classes="mystyle")
+
+    return tableHtml
+
+def buildIndiCourseTable(course):
+    indiScores = getIndiScores()
+    indiScores.set_index('course', inplace=True)
+    indiScores = indiScores.loc[course]
+    # calc indi matchups by looking at total net score and aligning between teams
+    playerScores = getPlayerScores()
+    courses = getCourses()
+    team1 = getTeam(1)
+    team2 = getTeam(2)
+    countedCourses = [k + '_net' for k, v in courses.items() if v['format'] == '2v2']
+    playerScores = playerScores[['player'] + countedCourses].set_index(['player'])
+    playerScores['total'] = playerScores.sum(axis=1)
+    team1 = playerScores.loc[list(team1.keys())].sort_values(['total'])
+    team2 = playerScores.loc[list(team2.keys())].sort_values(['total'])
+    matchups = []
+    for m in zip(team1.index.values, team2.index.values):
+        matchups.append(m)
+
+    # build table
+    rows = []
+    for m in matchups:
+        rows.append([m[0], indiScores.loc[m[0]], m[1], indiScores.loc[m[1]]])
+    table = pd.DataFrame(rows, columns=['Team1', 'Score', 'Team2', 'Score'])
+    return table
+
+def buildIndiCourseHtml(course):
+    table = buildIndiCourseTable(course)
+    tableHtml = "<h2>{}</h2>".format(course)
+    tableHtml += table.to_html(index=False, classes="mystyle")
+    return tableHtml
+
 
 
 

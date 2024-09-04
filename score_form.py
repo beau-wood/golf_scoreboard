@@ -1,8 +1,8 @@
 import pandas as pd
 import scoreboard
 
-Players = scoreboard.getPlayers()
-Courses = scoreboard.Courses
+Players = scoreboard.getAllPlayers().keys()
+Courses = scoreboard.getCourses().keys()
 
 
 def buildHTML():
@@ -29,14 +29,6 @@ def buildHTML():
     # Score
     formItems.append('<label for="score_net">Score (Net):</label>')
     formItems.append('<input class="mystyle" type="text" id="score" name="score_net" required><br><br>')
-
-    # Winner?
-    # Courses
-    formItems.append('<label for="winner">Result:</label>')
-    formItems.append('<select class="mystyle" id="winner" name="winner">')
-    for c in ['Loss', 'Win']:
-        formItems.append('<option class="mystyle" value="{winner}" required>{winner}</option>'.format(winner=c))
-    formItems.append('</select><br><br>')
 
     formItems.append('<input class="mystyle" type="submit"></form></body></html>')
 
@@ -70,13 +62,12 @@ def buildHTML():
 
 
 def storeScores(formData):
-    print(formData)
-    df = pd.read_csv('data/Scoreboard.csv')
-    df.loc[df['Name'] == formData['name'], formData['course']] = int(formData['score'])
-    df.loc[df['Name'] == formData['name'], formData['course'] + '_net'] = int(formData['score_net'])
-    df.loc[df['Name'] == formData['name'], formData['course']+'_Pts'] = 1 if formData['winner'] == 'Win' else 0
-    df = df.fillna(0)
-    df['Total'] = df[Courses].sum(axis=1)
-    netCourses = [x + '_net' for x in Courses]
-    df['Total_net'] = df[netCourses].sum(axis=1)
-    df.to_csv('data/Scoreboard.csv', index=False)
+    df = pd.read_csv('data/playerScores.csv')
+    player = formData['name']
+    course = formData['course']
+    score = formData['score']
+    score_net = formData['score_net']
+    df.set_index('player', inplace=True)
+    df.loc[player, course] = score
+    df.loc[player, course+'_net'] = score_net
+    df.to_csv('data/playerScores.csv', index=True)
