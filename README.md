@@ -21,6 +21,5 @@ eb ssh
 scp -i /home/bwood/.ssh/laxbets-keypair /home/bwood/Desktop/Fun/RudysCup/data/playerScores.csv ec2-user@18.189.11.176:/tmp/
 ssh -i /home/bwood/.ssh/laxbets-keypair ec2-user@18.189.11.176
 sudo mv playerScores.csv /var/app/current/data/
+sudo chmod ugo+rwx playerScores.csv
 ```
-?
-sudo chmod ugo+rwx <dir or file>
