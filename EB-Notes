@@ -4,11 +4,11 @@ eb create flask-env
 eb open
 eb ssh
 
-ssh -i /home/bwood/.ssh/laxbets-keypair ec2-user@18.191.247.158
 
--rw-rw-r-- 1 webapp webapp 7449 Apr 17 11:21 Matchups.xlsx
+scp -i /home/bwood/.ssh/laxbets-keypair /home/bwood/Desktop/Fun/RudysCup/data/playerScores.csv ec2-user@18.189.11.176:/tmp/
+ssh -i /home/bwood/.ssh/laxbets-keypair ec2-user@18.189.11.176
+sudo mv playerScores.csv /var/app/current/data/
 
-scp -i /home/bwood/.ssh/laxbets-keypair /home/bwood/Desktop/Fun/golfscoreboard/Scoreboard.csv ec2-user@18.119.103.1:/var/app/current/
 
 
 sudo chmod ugo+rwx <dir or file>

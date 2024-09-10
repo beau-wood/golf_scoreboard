@@ -2,9 +2,9 @@
 
 .mystyle {
     font-family: Arial;
-    border-collapse: collapse; 
+    border-collapse: collapse;
     border: 1px solid silver;
-    margin-left: auto; 
+    margin-left: auto;
     margin-right: auto;
     font-size: 25px;
 }
@@ -52,4 +52,41 @@ h2 {
 .header a {
   float: none;
   text-align: left;
+}
+
+body {
+    font-family: Arial, sans-serif;
+}
+.form-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+}
+.course-section {
+    margin-bottom: 20px;
+}
+.course-section h2 {
+    margin-top: 0;
+}
+.remove-course {
+    color: red;
+    cursor: pointer;
+    display: block;
+    margin-top: 5px;
 }

@@ -2,21 +2,22 @@
 
 ### Rudy's Cup
 
-EB-Notes has info for deploying to Elastic Beanstalk
 
-### Data Files
-- team1.csv - team1 players and handicaps
-- team2.csv - team2 players and handicaps
-- courses.csv - courses and formats at each
-- matchups.csv - courses and the 4 2-player teams at each
-- playerScores.csv - player gross and net scores for each course
-- teamScores.csv - points for 2v2 matchups
-- indiScores.csv - points for 1v1 matchups
+#### To update requirements use (for proper eb formatting)
+pip list --format=freeze > requirements.txt
 
 
-### Order of operations
-- /players
-- /courses
-- /matchups
-- /team-scores
-- /indi-scores
+#### EB Notes
+eb init -p python-3.8 golfscoreboard --region us-east-2
+eb init
+eb create flask-env
+eb open
+eb ssh
+
+
+scp -i /home/bwood/.ssh/laxbets-keypair /home/bwood/Desktop/Fun/RudysCup/data/playerScores.csv ec2-user@18.189.11.176:/tmp/
+ssh -i /home/bwood/.ssh/laxbets-keypair ec2-user@18.189.11.176
+sudo mv playerScores.csv /var/app/current/data/
+
+?
+sudo chmod ugo+rwx <dir or file>
